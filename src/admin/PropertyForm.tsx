@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Loader2, ArrowLeft, Upload, X, Plus } from 'lucide-react';
+import { Loader2, ArrowLeft, Upload, X, Plus, Check } from 'lucide-react';
 import SEO from '../components/SEO';
 import { apiGet, apiMut, CITY_AREAS, PROPERTY_TYPES, STATUSES, LISTING_TYPES } from '../lib/api';
 import { Card, inputCls, labelCls, btnPrimary, btnGhost } from './ui';
@@ -13,6 +13,15 @@ const EMPTY = {
   rera_number: '', featured: false, is_active: true,
 };
 
+export const STANDARD_AMENITIES = [
+  '24x7 Security', 'Clubhouse', 'Covered Parking', 'EV Charging',
+  'High-speed Lifts', 'Power Backup', 'Amphitheatre', 'Creche',
+  'Kids Play Area', 'Senior Citizen Deck', 'Landscaped Gardens', 'Pet Park',
+  'Infinity Pool', 'Rooftop Lounge', 'Badminton Court', 'Cricket Pitch',
+  'Jogging Track', 'Tennis Court', 'Gymnasium', 'Spa & Sauna',
+  'Swimming Pool', 'Yoga Pavilion', 'Business Centre', 'Co-work Lounge',
+];
+
 const STOCK = ['/images/tower-a.jpg', '/images/tower-b.jpg', '/images/tower-c.jpg', '/images/living-a.jpg', '/images/living-b.jpg', '/images/bedroom-a.jpg', '/images/kitchen-a.jpg', '/images/bath-a.jpg', '/images/villa-a.jpg', '/images/penthouse-a.jpg', '/images/pool-a.jpg', '/images/lobby-a.jpg', '/images/hero-skyline.jpg', '/images/thane-lake.jpg'];
 
 export default function PropertyForm() {
@@ -20,8 +29,9 @@ export default function PropertyForm() {
   const isNew = !id || id === 'new';
   const navigate = useNavigate();
   const [form, setForm] = useState<Record<string, unknown>>(EMPTY);
-  const [amenities, setAmenities] = useState<any[]>([]);
-  const [selAmen, setSelAmen] = useState<number[]>([]);
+  const [selectedStandard, setSelectedStandard] = useState<string[]>([]);
+  const [customAmenities, setCustomAmenities] = useState<string[]>([]);
+  const [customInput, setCustomInput] = useState('');
   const [projects, setProjects] = useState<any[]>([]);
   const [developers, setDevelopers] = useState<any[]>([]);
   const [gallery, setGallery] = useState<string[]>([]);
@@ -34,21 +44,71 @@ export default function PropertyForm() {
 
   useEffect(() => {
     Promise.all([
-      apiGet('/api/amenities').catch(() => []),
       apiGet('/api/projects?limit=100').catch(() => ({ data: [] })),
       apiGet('/api/developers?limit=100').catch(() => ({ data: [] })),
-    ]).then(([a, pr, dv]) => { setAmenities(a || []); setProjects(pr.data || []); setDevelopers(dv.data || []); });
+    ]).then(([pr, dv]) => {
+      setProjects(pr.data || []);
+      setDevelopers(dv.data || []);
+    });
+
     if (!isNew) {
       apiGet(`/api/properties?id=${id}`).then((d) => {
         const f: Record<string, unknown> = { ...EMPTY };
         Object.keys(EMPTY).forEach((k) => { if (d[k] !== undefined && d[k] !== null) f[k] = d[k]; });
         if (!f.locality && d.locality) f.locality = d.locality;
         setForm(f);
-        setSelAmen((d.property_amenities || []).map((x: any) => x.amenities?.id).filter(Boolean));
+
+        // Load existing property amenities
+        const existingNames: string[] = (d.property_amenities || [])
+          .map((x: any) => x.amenities?.name)
+          .filter(Boolean);
+
+        const stdSel: string[] = [];
+        const custSel: string[] = [];
+
+        existingNames.forEach((name) => {
+          const matchedStd = STANDARD_AMENITIES.find(
+            (s) => s.toLowerCase() === name.toLowerCase()
+          );
+          if (matchedStd) {
+            if (!stdSel.includes(matchedStd)) stdSel.push(matchedStd);
+          } else {
+            if (!custSel.includes(name)) custSel.push(name);
+          }
+        });
+
+        setSelectedStandard(stdSel);
+        setCustomAmenities(custSel);
         setGallery((d.property_images || []).slice().sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0)).map((x: any) => x.image_url));
       }).catch(() => setError('Failed to load listing.')).finally(() => setLoading(false));
     }
   }, [id, isNew]);
+
+  const handleAddCustom = () => {
+    const trimmed = customInput.trim();
+    if (!trimmed) return;
+
+    // Check if matches standard amenity
+    const matchedStd = STANDARD_AMENITIES.find(
+      (s) => s.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (matchedStd) {
+      if (!selectedStandard.includes(matchedStd)) {
+        setSelectedStandard((prev) => [...prev, matchedStd]);
+      }
+      setCustomInput('');
+      return;
+    }
+
+    // Add to custom amenities if not already present
+    const exists = customAmenities.some(
+      (c) => c.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (!exists) {
+      setCustomAmenities((prev) => [...prev, trimmed]);
+    }
+    setCustomInput('');
+  };
 
   const set = (k: string, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -82,13 +142,14 @@ export default function PropertyForm() {
     setSaving(true);
     try {
       const num = (v: unknown) => (v === '' || v === null || v === undefined ? null : Number(v));
+      const allAmenityNames = [...selectedStandard, ...customAmenities];
       const payload: Record<string, unknown> = {
         ...form,
         price: num(form.price), bedrooms: num(form.bedrooms), bathrooms: num(form.bathrooms),
         area_sqft: num(form.area_sqft), floor_no: form.floor_no === '' ? null : form.floor_no,
         total_floors: num(form.total_floors), project_id: form.project_id === '' ? null : form.project_id,
         developer_id: form.developer_id === '' ? null : form.developer_id,
-        amenity_ids: selAmen, images: gallery,
+        amenity_names: allAmenityNames, images: gallery,
       };
       if (!isNew) payload.id = Number(id);
       await apiMut('/api/properties', isNew ? 'POST' : 'PUT', payload);
@@ -164,13 +225,96 @@ export default function PropertyForm() {
 
         <Card className="p-5 lg:p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-serif text-lg text-ink">Amenities</h2>
-            <span className="text-xs text-ink/45">{selAmen.length} selected</span>
+            <div>
+              <h2 className="font-serif text-lg text-ink">Amenities & Features</h2>
+              <p className="text-xs text-ink/50 mt-0.5">Select features for this property or add custom ones for this listing.</p>
+            </div>
+            <span className="text-xs font-medium text-ink/70 bg-ink/5 border border-ink/10 px-2.5 py-1">
+              {selectedStandard.length + customAmenities.length} selected
+            </span>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {amenities.map((a) => (
-              <button type="button" key={a.id} onClick={() => setSelAmen((s) => s.includes(a.id) ? s.filter((x) => x !== a.id) : [...s, a.id])} className={`px-3 py-1.5 text-xs border transition ${selAmen.includes(a.id) ? 'bg-ink text-gold border-ink' : 'border-ink/15 text-ink/60 hover:border-gold'}`}>{a.name}</button>
-            ))}
+
+          {/* Standard 24 Amenities */}
+          <div>
+            <div className="text-[11px] font-semibold tracking-wider uppercase text-ink/45 mb-2.5">Standard Amenities</div>
+            <div className="flex flex-wrap gap-2">
+              {STANDARD_AMENITIES.map((name) => {
+                const selected = selectedStandard.includes(name);
+                return (
+                  <button
+                    type="button"
+                    key={name}
+                    onClick={() =>
+                      setSelectedStandard((prev) =>
+                        prev.includes(name) ? prev.filter((x) => x !== name) : [...prev, name]
+                      )
+                    }
+                    className={`px-3.5 py-2 text-xs border transition flex items-center gap-1.5 ${
+                      selected
+                        ? 'bg-ink text-gold border-ink font-medium shadow-sm'
+                        : 'bg-white border-ink/15 text-ink/75 hover:border-gold hover:text-ink'
+                    }`}
+                  >
+                    {selected && <Check size={12} className="text-gold" />}
+                    {name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Custom Amenities for this Property Only */}
+          {customAmenities.length > 0 && (
+            <div className="pt-3 border-t border-ink/10">
+              <div className="text-[11px] font-semibold tracking-wider uppercase text-gold-dark mb-2.5">Custom Features (This Property Only)</div>
+              <div className="flex flex-wrap gap-2">
+                {customAmenities.map((name) => (
+                  <span
+                    key={name}
+                    className="px-3.5 py-2 text-xs border bg-gold/15 text-ink font-medium border-gold/40 flex items-center gap-2"
+                  >
+                    <Check size={12} className="text-gold-dark" />
+                    {name}
+                    <button
+                      type="button"
+                      onClick={() => setCustomAmenities((prev) => prev.filter((x) => x !== name))}
+                      className="text-ink/40 hover:text-red-600 transition"
+                      title="Remove custom amenity"
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Custom Amenity Input */}
+          <div className="pt-3 border-t border-ink/10">
+            <label className="text-xs font-medium text-ink/70 block mb-1.5">Add Custom Feature / Facility (Optional, unique to this property)</label>
+            <div className="flex gap-2 max-w-md">
+              <input
+                type="text"
+                value={customInput}
+                onChange={(e) => setCustomInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddCustom();
+                  }
+                }}
+                placeholder="Type custom amenity (e.g. Private Pool, Sky Lounge)..."
+                className={inputCls + ' text-xs !py-2'}
+              />
+              <button
+                type="button"
+                onClick={handleAddCustom}
+                disabled={!customInput.trim()}
+                className={btnGhost + ' !py-2 !px-4 text-xs shrink-0 flex items-center gap-1'}
+              >
+                <Plus size={13} /> Add Feature
+              </button>
+            </div>
           </div>
         </Card>
 

@@ -14,6 +14,35 @@ function cleanBody(body) {
   return b;
 }
 
+async function savePropertyAmenities(propertyId, amenityNames, amenityIds) {
+  await supabase.from('property_amenities').delete().eq('property_id', propertyId);
+  const idsToLink = new Set();
+  if (Array.isArray(amenityIds)) {
+    amenityIds.forEach((id) => idsToLink.add(Number(id)));
+  }
+  if (Array.isArray(amenityNames)) {
+    for (const name of amenityNames) {
+      const cleanName = String(name).trim();
+      if (!cleanName) continue;
+      let { data: existing } = await supabase.from('amenities').select('id').ilike('name', cleanName).maybeSingle();
+      if (!existing) {
+        const { data: created } = await supabase.from('amenities').insert({ name: cleanName, category: 'General' }).select('id').single();
+        if (created) existing = created;
+      }
+      if (existing?.id) {
+        idsToLink.add(existing.id);
+      }
+    }
+  }
+  if (idsToLink.size > 0) {
+    const rows = Array.from(idsToLink).map((amenity_id) => ({
+      property_id: propertyId,
+      amenity_id,
+    }));
+    await supabase.from('property_amenities').insert(rows);
+  }
+}
+
 export default async function handler(req, res) {
   setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -68,16 +97,14 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const auth = await requireRole(req, res, [...SALES_ROLES, ...CONTENT_ROLES]);
       if (!auth) return;
-      const { amenity_ids, images, ...rest } = req.body || {};
+      const { amenity_ids, amenity_names, images, ...rest } = req.body || {};
       const body = cleanBody(rest);
       if (!body.title) return res.status(400).json({ error: 'Title is required' });
       if (!body.slug) body.slug = `${slugify(body.title)}-${Date.now().toString(36)}`;
       const { data, error } = await supabase.from('properties').insert(body).select().single();
       if (error) throw error;
       audit(req, auth, 'create', 'property', data.id, { title: data.title });
-      if (Array.isArray(amenity_ids) && amenity_ids.length) {
-        await supabase.from('property_amenities').insert(amenity_ids.map((a) => ({ property_id: data.id, amenity_id: Number(a) })));
-      }
+      await savePropertyAmenities(data.id, amenity_names, amenity_ids);
       if (Array.isArray(images) && images.length) {
         await supabase.from('property_images').insert(images.map((img, i) => ({ property_id: data.id, image_url: typeof img === 'string' ? img : img.image_url, caption: (img && img.caption) || '', sort_order: i })));
       }
@@ -86,16 +113,21 @@ export default async function handler(req, res) {
     if (req.method === 'PUT') {
       const auth = await requireRole(req, res, [...SALES_ROLES, ...CONTENT_ROLES]);
       if (!auth) return;
-      const { id, amenity_ids, images, ...rest } = req.body || {};
+      const { id, amenity_ids, amenity_names, images, ...rest } = req.body || {};
       if (!id) return res.status(400).json({ error: 'id required' });
       const body = cleanBody(rest);
       const { data, error } = await supabase.from('properties').update(body).eq('id', id).select().single();
       if (error) throw error;
       audit(req, auth, 'update', 'property', id, { fields: Object.keys(body) });
-      if (Array.isArray(amenity_ids)) {
-        await supabase.from('property_amenities').delete().eq('property_id', id);
-        if (amenity_ids.length) await supabase.from('property_amenities').insert(amenity_ids.map((a) => ({ property_id: id, amenity_id: Number(a) })));
+      if (Array.isArray(amenity_ids) || Array.isArray(amenity_names)) {
+        await savePropertyAmenities(id, amenity_names, amenity_ids);
       }
+      if (Array.isArray(images)) {
+        await supabase.from('property_images').delete().eq('property_id', id);
+        if (images.length) await supabase.from('property_images').insert(images.map((img, i) => ({ property_id: id, image_url: typeof img === 'string' ? img : img.image_url, caption: (img && img.caption) || '', sort_order: i })));
+      }
+      return res.status(200).json(data);
+    }
       if (Array.isArray(images)) {
         await supabase.from('property_images').delete().eq('property_id', id);
         if (images.length) await supabase.from('property_images').insert(images.map((img, i) => ({ property_id: id, image_url: typeof img === 'string' ? img : img.image_url, caption: (img && img.caption) || '', sort_order: i })));
