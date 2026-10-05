@@ -22,6 +22,21 @@ export const STANDARD_AMENITIES = [
   'Swimming Pool', 'Yoga Pavilion', 'Business Centre', 'Co-work Lounge',
 ];
 
+const DEFAULT_PROJECTS_FALLBACK = [
+  { id: 1, name: 'Worli Sea Crest', locality: 'Worli' },
+  { id: 2, name: 'Hiranandani Oakwood', locality: 'Powai' },
+  { id: 3, name: 'Serenity Lakeside', locality: 'Thane West' },
+  { id: 4, name: 'Sagar Vihar Waterfront', locality: 'Vashi' },
+  { id: 5, name: 'Belapur Crest', locality: 'Belapur' },
+  { id: 6, name: 'Palm Meadows', locality: 'Kharghar' },
+  { id: 7, name: 'Nexzone Aria', locality: 'Panvel' },
+  { id: 8, name: 'Urbania Crown', locality: 'Majiwada' },
+  { id: 9, name: 'Ghodbunder Gateway', locality: 'Ghodbunder Road' },
+  { id: 10, name: 'Riverside County', locality: 'Panvel' },
+  { id: 11, name: 'Grand Central Seawoods', locality: 'Nerul' },
+  { id: 12, name: 'Godrej Hills Retreat', locality: 'Kharghar' },
+];
+
 const STOCK = ['/images/tower-a.jpg', '/images/tower-b.jpg', '/images/tower-c.jpg', '/images/living-a.jpg', '/images/living-b.jpg', '/images/bedroom-a.jpg', '/images/kitchen-a.jpg', '/images/bath-a.jpg', '/images/villa-a.jpg', '/images/penthouse-a.jpg', '/images/pool-a.jpg', '/images/lobby-a.jpg', '/images/hero-skyline.jpg', '/images/thane-lake.jpg'];
 
 export default function PropertyForm() {
@@ -47,7 +62,8 @@ export default function PropertyForm() {
       apiGet('/api/projects?limit=100').catch(() => ({ data: [] })),
       apiGet('/api/developers?limit=100').catch(() => ({ data: [] })),
     ]).then(([pr, dv]) => {
-      setProjects(pr.data || []);
+      const prList = pr.data || [];
+      setProjects(prList.length > 0 ? prList : DEFAULT_PROJECTS_FALLBACK);
       setDevelopers(dv.data || []);
     });
 
