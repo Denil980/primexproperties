@@ -3,11 +3,11 @@ import { requireRole, slugify, setCors, SALES_ROLES, CONTENT_ROLES, ADMIN_ROLES,
 
 const LIST_SELECT = '*, projects(id,name,locality,city,cover_image,rera_number,rera_status,status), developers(id,name)';
 const DETAIL_SELECT = '*, projects(*), developers(*), property_images(*), property_amenities(amenities(*))';
-const NESTED_KEYS = ['projects', 'developers', 'property_images', 'property_amenities'];
+const NON_COLUMN_KEYS = ['projects', 'developers', 'property_images', 'property_amenities', 'amenity_ids', 'amenity_names', 'images'];
 
 function cleanBody(body) {
   const b = { ...(body || {}) };
-  NESTED_KEYS.forEach((k) => delete b[k]);
+  NON_COLUMN_KEYS.forEach((k) => delete b[k]);
   delete b.id;
   delete b.created_at;
   Object.keys(b).forEach((k) => { if (b[k] === '') b[k] = null; });
@@ -122,12 +122,6 @@ export default async function handler(req, res) {
       if (Array.isArray(amenity_ids) || Array.isArray(amenity_names)) {
         await savePropertyAmenities(id, amenity_names, amenity_ids);
       }
-      if (Array.isArray(images)) {
-        await supabase.from('property_images').delete().eq('property_id', id);
-        if (images.length) await supabase.from('property_images').insert(images.map((img, i) => ({ property_id: id, image_url: typeof img === 'string' ? img : img.image_url, caption: (img && img.caption) || '', sort_order: i })));
-      }
-      return res.status(200).json(data);
-    }
       if (Array.isArray(images)) {
         await supabase.from('property_images').delete().eq('property_id', id);
         if (images.length) await supabase.from('property_images').insert(images.map((img, i) => ({ property_id: id, image_url: typeof img === 'string' ? img : img.image_url, caption: (img && img.caption) || '', sort_order: i })));
