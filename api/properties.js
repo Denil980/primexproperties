@@ -3,14 +3,23 @@ import { requireRole, slugify, setCors, SALES_ROLES, CONTENT_ROLES, ADMIN_ROLES,
 
 const LIST_SELECT = '*, projects(id,name,locality,city,cover_image,rera_number,rera_status,status), developers(id,name)';
 const DETAIL_SELECT = '*, projects(*), developers(*), property_images(*), property_amenities(amenities(*))';
-const NON_COLUMN_KEYS = ['projects', 'developers', 'property_images', 'property_amenities', 'amenity_ids', 'amenity_names', 'images'];
+
+const VALID_PROPERTY_COLUMNS = new Set([
+  'title', 'slug', 'description', 'property_type', 'listing_type', 'status',
+  'price', 'bedrooms', 'bathrooms', 'area_sqft', 'carpet_note', 'floor_no',
+  'total_floors', 'facing', 'furnishing', 'parking', 'possession_date',
+  'address', 'locality', 'city', 'project_id', 'developer_id', 'cover_image',
+  'video_url', 'rera_approved', 'rera_number', 'featured', 'is_active', 'views',
+]);
 
 function cleanBody(body) {
-  const b = { ...(body || {}) };
-  NON_COLUMN_KEYS.forEach((k) => delete b[k]);
-  delete b.id;
-  delete b.created_at;
-  Object.keys(b).forEach((k) => { if (b[k] === '') b[k] = null; });
+  const b = {};
+  if (!body || typeof body !== 'object') return b;
+  for (const [key, value] of Object.entries(body)) {
+    if (VALID_PROPERTY_COLUMNS.has(key)) {
+      b[key] = value === '' ? null : value;
+    }
+  }
   return b;
 }
 

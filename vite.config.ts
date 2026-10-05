@@ -72,7 +72,7 @@ function apiDevPlugin(): Plugin {
         };
 
         try {
-          const fileUrl = pathToFileURL(apiFilePath).href;
+          const fileUrl = `${pathToFileURL(apiFilePath).href}?v=${Date.now()}`;
           const mod = await import(fileUrl);
           const handler = mod.default || mod;
           await handler(req, res);
