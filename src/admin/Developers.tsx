@@ -3,12 +3,14 @@ import { Loader2, Pencil, Trash2, Plus, X } from 'lucide-react';
 import SEO from '../components/SEO';
 import { apiGet, apiMut } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useModal } from '../contexts/ModalContext';
 import { Card, CardHead, Empty, inputCls, labelCls, btnPrimary, btnGhost } from './ui';
 
 const EMPTY = { name: '', slug: '', description: '', hq: 'Mumbai', founded_year: '', projects_delivered: '', ongoing_projects: '', rating: '', featured: false };
 
 export default function AdminDevelopers() {
   const { isAdmin } = useAuth();
+  const { showConfirm } = useModal();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<any>(null);
@@ -45,7 +47,8 @@ export default function AdminDevelopers() {
   };
 
   const remove = async (id: number) => {
-    if (!confirm('Delete this developer?')) return;
+    const ok = await showConfirm('Delete this developer profile?', 'Delete Developer');
+    if (!ok) return;
     await apiMut('/api/developers', 'DELETE', { id });
     load();
   };

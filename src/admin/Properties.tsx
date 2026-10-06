@@ -4,10 +4,12 @@ import { Loader2, Pencil, Trash2, Plus, Search, Eye, EyeOff, Star } from 'lucide
 import SEO from '../components/SEO';
 import { apiGet, apiMut, formatINR } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useModal } from '../contexts/ModalContext';
 import { Card, CardHead, Empty, inputCls, btnPrimary, btnGhost, StatusPill, Pagination } from './ui';
 
 export default function AdminProperties() {
   const { isAdmin } = useAuth();
+  const { showConfirm } = useModal();
   const [items, setItems] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -35,7 +37,8 @@ export default function AdminProperties() {
   };
 
   const remove = async (id: number) => {
-    if (!confirm('Delete this listing permanently?')) return;
+    const ok = await showConfirm('Delete this listing permanently?', 'Delete Property');
+    if (!ok) return;
     await apiMut('/api/properties', 'DELETE', { id });
     load();
   };

@@ -3,12 +3,14 @@ import { Loader2, Search, Trash2, X, Phone, Mail, CalendarPlus } from 'lucide-re
 import SEO from '../components/SEO';
 import { apiGet, apiMut, formatINR, timeAgo } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useModal } from '../contexts/ModalContext';
 import { Card, CardHead, Empty, inputCls, labelCls, btnPrimary, btnGhost, StatusPill } from './ui';
 
 const LEAD_STATUSES = ['New', 'Contacted', 'Qualified', 'Site Visit Scheduled', 'Site Visit Done', 'Negotiation', 'Closed', 'Lost'];
 
 export default function AdminLeads() {
   const { isAdmin, role, profile } = useAuth();
+  const { showAlert, showConfirm } = useModal();
   const [items, setItems] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -43,7 +45,10 @@ export default function AdminLeads() {
   };
 
   const bookVisit = async () => {
-    if (!visitForm.visit_date) { alert('Pick a date first.'); return; }
+    if (!visitForm.visit_date) {
+      await showAlert('Please select a visit date first.', 'Date Required');
+      return;
+    }
     setSaving(true);
     try {
       await apiMut('/api/site-visits', 'POST', {
@@ -54,14 +59,15 @@ export default function AdminLeads() {
       setSelected({ ...selected, status: 'Site Visit Scheduled' });
       setVisitForm({ visit_date: '', visit_time: '11:00 AM' });
       load();
-      alert('Site visit booked.');
+      await showAlert('Site visit has been booked successfully.', 'Visit Scheduled', 'success');
     } finally {
       setSaving(false);
     }
   };
 
   const remove = async (id: number) => {
-    if (!confirm('Delete this lead?')) return;
+    const ok = await showConfirm('Are you sure you want to delete this lead record?', 'Delete Lead');
+    if (!ok) return;
     await apiMut('/api/leads', 'DELETE', { id });
     setSelected(null);
     load();

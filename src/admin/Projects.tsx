@@ -3,12 +3,14 @@ import { Loader2, Pencil, Trash2, Plus, X, ShieldCheck } from 'lucide-react';
 import SEO from '../components/SEO';
 import { apiGet, apiMut, formatINR, CITY_AREAS } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useModal } from '../contexts/ModalContext';
 import { Card, CardHead, Empty, inputCls, labelCls, btnPrimary, btnGhost, StatusPill, Pagination } from './ui';
 
 const EMPTY = { name: '', slug: '', description: '', city: 'Navi Mumbai', locality: '', address: '', developer_id: '', status: 'New Launch', configurations: '', price_min: '', price_max: '', total_units: '', tower_count: '', possession_date: '', rera_number: '', rera_status: 'Applied', cover_image: '', amenities_text: '', featured: false };
 
 export default function AdminProjects() {
   const { isAdmin } = useAuth();
+  const { showConfirm } = useModal();
   const [items, setItems] = useState<any[]>([]);
   const [devs, setDevs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +50,8 @@ export default function AdminProjects() {
   };
 
   const remove = async (id: number) => {
-    if (!confirm('Delete this project? Linked listings will be unlinked.')) return;
+    const ok = await showConfirm('Delete this project? Linked listings will be unlinked.', 'Delete Project');
+    if (!ok) return;
     await apiMut('/api/projects', 'DELETE', { id });
     load();
   };

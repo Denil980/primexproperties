@@ -39,6 +39,8 @@ import AdminAnalytics from './admin/Analytics';
 import AdminUsers from './admin/Users';
 import AdminAuditLogs from './admin/AuditLogs';
 
+import { ModalProvider } from './contexts/ModalContext';
+
 handleGoogleRedirect();
 
 function ScrollToTop() {
@@ -62,8 +64,9 @@ function PublicShell({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <FavoritesProvider>
+      <ModalProvider>
+        <BrowserRouter>
+          <FavoritesProvider>
           <ScrollToTop />
           <Routes>
             <Route path="/" element={<PublicShell><Home /></PublicShell>} />
@@ -105,6 +108,7 @@ export default function App() {
           </Routes>
         </FavoritesProvider>
       </BrowserRouter>
-    </AuthProvider>
+    </ModalProvider>
+  </AuthProvider>
   );
 }
