@@ -23,6 +23,34 @@ function cleanBody(body) {
   return b;
 }
 
+async function validateForeignKeys(body) {
+  if (body.project_id !== undefined && body.project_id !== null && body.project_id !== '') {
+    const pid = Number(body.project_id);
+    if (isNaN(pid) || pid <= 0) {
+      body.project_id = null;
+    } else {
+      const { data } = await supabase.from('projects').select('id').eq('id', pid).maybeSingle();
+      if (!data) body.project_id = null;
+      else body.project_id = pid;
+    }
+  } else if ('project_id' in body) {
+    body.project_id = null;
+  }
+
+  if (body.developer_id !== undefined && body.developer_id !== null && body.developer_id !== '') {
+    const did = Number(body.developer_id);
+    if (isNaN(did) || did <= 0) {
+      body.developer_id = null;
+    } else {
+      const { data } = await supabase.from('developers').select('id').eq('id', did).maybeSingle();
+      if (!data) body.developer_id = null;
+      else body.developer_id = did;
+    }
+  } else if ('developer_id' in body) {
+    body.developer_id = null;
+  }
+}
+
 async function savePropertyAmenities(propertyId, amenityNames, amenityIds) {
   await supabase.from('property_amenities').delete().eq('property_id', propertyId);
   const idsToLink = new Set();
@@ -110,6 +138,7 @@ export default async function handler(req, res) {
       const body = cleanBody(rest);
       if (!body.title) return res.status(400).json({ error: 'Title is required' });
       if (!body.slug) body.slug = `${slugify(body.title)}-${Date.now().toString(36)}`;
+      await validateForeignKeys(body);
       const { data, error } = await supabase.from('properties').insert(body).select().single();
       if (error) throw error;
       audit(req, auth, 'create', 'property', data.id, { title: data.title });
@@ -125,6 +154,7 @@ export default async function handler(req, res) {
       const { id, amenity_ids, amenity_names, images, ...rest } = req.body || {};
       if (!id) return res.status(400).json({ error: 'id required' });
       const body = cleanBody(rest);
+      await validateForeignKeys(body);
       const { data, error } = await supabase.from('properties').update(body).eq('id', id).select().single();
       if (error) throw error;
       audit(req, auth, 'update', 'property', id, { fields: Object.keys(body) });
