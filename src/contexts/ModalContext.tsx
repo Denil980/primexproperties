@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, CheckCircle2, HelpCircle, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, HelpCircle, X, ShieldAlert } from 'lucide-react';
 
 interface ModalOptions {
   title?: string;
@@ -58,49 +58,64 @@ export function ModalProvider({ children }: { children: ReactNode }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-ink/75 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-[100] bg-ink/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
             onClick={modal.type === 'confirm' ? handleCancel : handleConfirm}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 15 }}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 15 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 360 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#f4f1ea] border border-ink/20 shadow-2xl w-full max-w-md overflow-hidden relative"
+              className="bg-[#131822] border border-[#b98a2f]/40 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] w-full max-w-md overflow-hidden relative"
             >
               {/* Gold Top Accent Line */}
-              <div className="h-1 bg-gradient-to-r from-[#b98a2f] via-[#e5c07b] to-[#b98a2f]" />
+              <div className="h-1 w-full bg-gradient-to-r from-[#b98a2f] via-[#f3e5ab] to-[#b98a2f]" />
 
-              {/* Header */}
-              <div className="bg-[#131822] px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {modal.type === 'success' ? (
-                    <CheckCircle2 size={20} className="text-emerald-400 shrink-0" />
-                  ) : modal.type === 'confirm' ? (
-                    <HelpCircle size={20} className="text-[#b98a2f] shrink-0" />
-                  ) : (
-                    <AlertCircle size={20} className="text-[#b98a2f] shrink-0" />
-                  )}
-                  <h3 className="font-serif text-white text-lg font-medium tracking-wide">{modal.title}</h3>
+              {/* Header with Close Button */}
+              <div className="pt-6 px-6 pb-2 flex items-start justify-between">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#1b2230] to-[#0d1017] border border-[#b98a2f]/30 flex items-center justify-center shadow-inner shrink-0">
+                    {modal.type === 'success' ? (
+                      <CheckCircle2 size={22} className="text-emerald-400" />
+                    ) : modal.danger ? (
+                      <ShieldAlert size={22} className="text-red-400" />
+                    ) : modal.type === 'confirm' ? (
+                      <HelpCircle size={22} className="text-[#b98a2f]" />
+                    ) : (
+                      <AlertCircle size={22} className="text-[#b98a2f]" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-gold text-[10px] tracking-[0.3em] uppercase font-mono font-medium">
+                      {modal.danger ? 'Confirmation Required' : modal.type === 'success' ? 'Notification' : 'Notice'}
+                    </div>
+                    <h3 className="font-serif text-white text-xl font-medium tracking-wide mt-0.5">{modal.title}</h3>
+                  </div>
                 </div>
-                <button onClick={handleCancel} className="text-white/50 hover:text-gold transition p-1" aria-label="Close dialog">
+                <button
+                  onClick={handleCancel}
+                  className="text-white/40 hover:text-gold transition p-1.5 rounded-lg hover:bg-white/5"
+                  aria-label="Close modal"
+                >
                   <X size={18} />
                 </button>
               </div>
 
               {/* Message Body */}
-              <div className="p-6">
-                <p className="text-ink/85 text-sm sm:text-base leading-relaxed">{modal.message}</p>
+              <div className="px-6 py-4">
+                <p className="text-white/85 text-sm sm:text-base leading-relaxed font-sans font-normal">
+                  {modal.message}
+                </p>
               </div>
 
               {/* Action Buttons */}
-              <div className="px-6 py-4 bg-ink/5 border-t border-ink/10 flex items-center justify-end gap-3">
+              <div className="px-6 py-4 bg-[#0c0f16] border-t border-white/10 flex items-center justify-end gap-3">
                 {modal.type === 'confirm' && (
                   <button
                     type="button"
                     onClick={handleCancel}
-                    className="border border-ink/20 text-ink/70 px-5 py-2.5 text-xs font-semibold tracking-[0.18em] uppercase hover:border-ink hover:text-ink transition"
+                    className="border border-white/20 text-white/70 px-5 py-2.5 text-xs font-semibold tracking-[0.2em] uppercase rounded-lg hover:border-gold hover:text-gold transition"
                   >
                     {modal.cancelText || 'Cancel'}
                   </button>
@@ -110,8 +125,8 @@ export function ModalProvider({ children }: { children: ReactNode }) {
                   onClick={handleConfirm}
                   className={
                     modal.danger
-                      ? 'bg-red-600 text-white px-6 py-2.5 text-xs font-semibold tracking-[0.18em] uppercase hover:bg-red-700 transition shadow-sm'
-                      : 'bg-ink text-gold px-6 py-2.5 text-xs font-semibold tracking-[0.18em] uppercase hover:bg-gold hover:text-ink transition shadow-sm'
+                      ? 'bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-2.5 text-xs font-semibold tracking-[0.2em] uppercase rounded-lg hover:from-red-500 hover:to-red-600 transition shadow-lg shadow-red-900/30'
+                      : 'bg-gradient-to-r from-[#b98a2f] via-[#d4af37] to-[#b98a2f] text-ink px-6 py-2.5 text-xs font-bold tracking-[0.2em] uppercase rounded-lg hover:from-white hover:to-white transition shadow-lg shadow-gold/20'
                   }
                 >
                   {modal.confirmText || 'OK'}
@@ -128,7 +143,6 @@ export function ModalProvider({ children }: { children: ReactNode }) {
 export function useModal() {
   const ctx = useContext(ModalContext);
   if (!ctx) {
-    // Fallback if used outside provider
     return {
       showAlert: async (msg: string) => alert(msg),
       showConfirm: async (msg: string) => confirm(msg),
