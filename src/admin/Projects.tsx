@@ -52,7 +52,8 @@ export default function AdminProjects() {
     load();
   };
 
-  const localities = form.city ? CITY_AREAS[String(form.city)] || [] : [];
+  const val = (v: unknown) => (v === null || v === undefined ? '' : String(v));
+  const localities = form.city ? CITY_AREAS[val(form.city)] || [] : [];
 
   return (
     <div className="space-y-5">
@@ -116,22 +117,22 @@ export default function AdminProjects() {
             </div>
             <form onSubmit={save} className="p-6 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="sm:col-span-2"><label className={labelCls}>Name *</label><input value={String(form.name)} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls} /></div>
-                <div className="sm:col-span-2"><label className={labelCls}>Description</label><textarea value={String(form.description)} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} className={inputCls} /></div>
-                <div><label className={labelCls}>City</label><select value={String(form.city)} onChange={(e) => setForm({ ...form, city: e.target.value, locality: '' })} className={inputCls}>{Object.keys(CITY_AREAS).map((c) => <option key={c}>{c}</option>)}</select></div>
-                <div><label className={labelCls}>Locality</label><select value={String(form.locality)} onChange={(e) => setForm({ ...form, locality: e.target.value })} className={inputCls}><option value="">Select…</option>{localities.map((l) => <option key={l}>{l}</option>)}</select></div>
-                <div><label className={labelCls}>Developer</label><select value={String(form.developer_id)} onChange={(e) => setForm({ ...form, developer_id: e.target.value })} className={inputCls}><option value="">None</option>{devs.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
-                <div><label className={labelCls}>Status</label><select value={String(form.status)} onChange={(e) => setForm({ ...form, status: e.target.value })} className={inputCls}>{['New Launch', 'Under Construction', 'Ready to Move', 'Completed'].map((s) => <option key={s}>{s}</option>)}</select></div>
-                <div><label className={labelCls}>Configurations</label><input value={String(form.configurations)} onChange={(e) => setForm({ ...form, configurations: e.target.value })} className={inputCls} placeholder="2, 3 BHK" /></div>
-                <div><label className={labelCls}>Possession</label><input value={String(form.possession_date)} onChange={(e) => setForm({ ...form, possession_date: e.target.value })} className={inputCls} placeholder="Dec 2028" /></div>
-                <div><label className={labelCls}>Price min (₹)</label><input type="number" value={String(form.price_min)} onChange={(e) => setForm({ ...form, price_min: e.target.value })} className={inputCls} /></div>
-                <div><label className={labelCls}>Price max (₹)</label><input type="number" value={String(form.price_max)} onChange={(e) => setForm({ ...form, price_max: e.target.value })} className={inputCls} /></div>
-                <div><label className={labelCls}>Total units</label><input type="number" value={String(form.total_units)} onChange={(e) => setForm({ ...form, total_units: e.target.value })} className={inputCls} /></div>
-                <div><label className={labelCls}>Towers</label><input type="number" value={String(form.tower_count)} onChange={(e) => setForm({ ...form, tower_count: e.target.value })} className={inputCls} /></div>
-                <div><label className={labelCls}>RERA number</label><input value={String(form.rera_number)} onChange={(e) => setForm({ ...form, rera_number: e.target.value })} className={inputCls} /></div>
-                <div><label className={labelCls}>RERA status</label><select value={String(form.rera_status)} onChange={(e) => setForm({ ...form, rera_status: e.target.value })} className={inputCls}>{['Applied', 'Approved', 'Expired', 'Not Applicable'].map((s) => <option key={s}>{s}</option>)}</select></div>
-                <div className="sm:col-span-2"><label className={labelCls}>Cover image URL</label><input value={String(form.cover_image)} onChange={(e) => setForm({ ...form, cover_image: e.target.value })} className={inputCls} /></div>
-                <div className="sm:col-span-2"><label className={labelCls}>Amenities (text)</label><textarea value={String(form.amenities_text)} onChange={(e) => setForm({ ...form, amenities_text: e.target.value })} rows={2} className={inputCls} /></div>
+                <div className="sm:col-span-2"><label className={labelCls}>Name *</label><input value={val(form.name)} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls} /></div>
+                <div className="sm:col-span-2"><label className={labelCls}>Description</label><textarea value={val(form.description)} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} className={inputCls} /></div>
+                <div><label className={labelCls}>City</label><select value={val(form.city) || 'Navi Mumbai'} onChange={(e) => setForm({ ...form, city: e.target.value, locality: '' })} className={inputCls}>{Object.keys(CITY_AREAS).map((c) => <option key={c}>{c}</option>)}</select></div>
+                <div><label className={labelCls}>Locality</label><select value={val(form.locality)} onChange={(e) => setForm({ ...form, locality: e.target.value })} className={inputCls}><option value="">Select…</option>{localities.map((l) => <option key={l}>{l}</option>)}</select></div>
+                <div><label className={labelCls}>Developer</label><select value={val(form.developer_id)} onChange={(e) => setForm({ ...form, developer_id: e.target.value })} className={inputCls}><option value="">None</option>{devs.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
+                <div><label className={labelCls}>Status</label><select value={val(form.status) || 'New Launch'} onChange={(e) => setForm({ ...form, status: e.target.value })} className={inputCls}>{['New Launch', 'Under Construction', 'Ready to Move', 'Completed'].map((s) => <option key={s}>{s}</option>)}</select></div>
+                <div><label className={labelCls}>Configurations</label><input value={val(form.configurations)} onChange={(e) => setForm({ ...form, configurations: e.target.value })} className={inputCls} placeholder="2, 3 BHK" /></div>
+                <div><label className={labelCls}>Possession</label><input value={val(form.possession_date)} onChange={(e) => setForm({ ...form, possession_date: e.target.value })} className={inputCls} placeholder="Dec 2028" /></div>
+                <div><label className={labelCls}>Price min (₹)</label><input type="number" value={val(form.price_min)} onChange={(e) => setForm({ ...form, price_min: e.target.value })} className={inputCls} /></div>
+                <div><label className={labelCls}>Price max (₹)</label><input type="number" value={val(form.price_max)} onChange={(e) => setForm({ ...form, price_max: e.target.value })} className={inputCls} /></div>
+                <div><label className={labelCls}>Total units</label><input type="number" value={val(form.total_units)} onChange={(e) => setForm({ ...form, total_units: e.target.value })} className={inputCls} /></div>
+                <div><label className={labelCls}>Towers</label><input type="number" value={val(form.tower_count)} onChange={(e) => setForm({ ...form, tower_count: e.target.value })} className={inputCls} /></div>
+                <div><label className={labelCls}>RERA number</label><input value={val(form.rera_number)} onChange={(e) => setForm({ ...form, rera_number: e.target.value })} className={inputCls} /></div>
+                <div><label className={labelCls}>RERA status</label><select value={val(form.rera_status) || 'Applied'} onChange={(e) => setForm({ ...form, rera_status: e.target.value })} className={inputCls}>{['Applied', 'Approved', 'Expired', 'Not Applicable'].map((s) => <option key={s}>{s}</option>)}</select></div>
+                <div className="sm:col-span-2"><label className={labelCls}>Cover image URL</label><input value={val(form.cover_image)} onChange={(e) => setForm({ ...form, cover_image: e.target.value })} className={inputCls} /></div>
+                <div className="sm:col-span-2"><label className={labelCls}>Amenities (text)</label><textarea value={val(form.amenities_text)} onChange={(e) => setForm({ ...form, amenities_text: e.target.value })} rows={2} className={inputCls} /></div>
                 <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} className="accent-[#b98a2f] w-4 h-4" /> Featured on homepage</label>
               </div>
               {error && <p className="text-red-600 text-sm">{error}</p>}
