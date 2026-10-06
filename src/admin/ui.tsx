@@ -65,3 +65,31 @@ export function StatusPill({ status }: { status: string }) {
 export function Empty({ text = 'No records found.' }: { text?: string }) {
   return <div className="px-5 py-12 text-center text-ink/45 text-sm">{text}</div>;
 }
+
+export function Pagination({ page, pages, onPageChange }: { page: number; pages: number; onPageChange: (p: number) => void }) {
+  const totalPages = Math.max(1, pages);
+  return (
+    <div className="flex items-center justify-center gap-6 px-5 py-4 border-t border-ink/10 bg-white">
+      <button
+        type="button"
+        disabled={page <= 1}
+        onClick={() => onPageChange(Math.max(1, page - 1))}
+        className="border border-ink/20 px-5 py-2 text-[11px] font-sans tracking-[0.2em] uppercase text-ink/75 hover:border-gold hover:text-gold-dark disabled:opacity-30 disabled:hover:border-ink/20 disabled:hover:text-ink/75 transition"
+      >
+        PREV
+      </button>
+      <span className="text-xs font-sans tracking-[0.2em] text-ink/70 px-2">
+        {page} / {totalPages}
+      </span>
+      <button
+        type="button"
+        disabled={page >= totalPages}
+        onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+        className="border border-ink/20 px-5 py-2 text-[11px] font-sans tracking-[0.2em] uppercase text-ink/75 hover:border-gold hover:text-gold-dark disabled:opacity-30 disabled:hover:border-ink/20 disabled:hover:text-ink/75 transition"
+      >
+        NEXT
+      </button>
+    </div>
+  );
+}
+

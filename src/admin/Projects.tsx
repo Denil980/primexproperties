@@ -3,7 +3,7 @@ import { Loader2, Pencil, Trash2, Plus, X, ShieldCheck } from 'lucide-react';
 import SEO from '../components/SEO';
 import { apiGet, apiMut, formatINR, CITY_AREAS } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
-import { Card, CardHead, Empty, inputCls, labelCls, btnPrimary, btnGhost, StatusPill } from './ui';
+import { Card, CardHead, Empty, inputCls, labelCls, btnPrimary, btnGhost, StatusPill, Pagination } from './ui';
 
 const EMPTY = { name: '', slug: '', description: '', city: 'Navi Mumbai', locality: '', address: '', developer_id: '', status: 'New Launch', configurations: '', price_min: '', price_max: '', total_units: '', tower_count: '', possession_date: '', rera_number: '', rera_status: 'Applied', cover_image: '', amenities_text: '', featured: false };
 
@@ -16,6 +16,7 @@ export default function AdminProjects() {
   const [form, setForm] = useState<Record<string, unknown>>({ ...EMPTY });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
 
   const load = () => {
     setLoading(true);
@@ -54,6 +55,9 @@ export default function AdminProjects() {
 
   const val = (v: unknown) => (v === null || v === undefined ? '' : String(v));
   const localities = form.city ? CITY_AREAS[val(form.city)] || [] : [];
+  const perPage = 7;
+  const pages = Math.max(1, Math.ceil(items.length / perPage));
+  const pagedItems = items.slice((page - 1) * perPage, page * perPage);
 
   return (
     <div className="space-y-5">
@@ -82,7 +86,7 @@ export default function AdminProjects() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-ink/5">
-                {items.map((p) => (
+                {pagedItems.map((p) => (
                   <tr key={p.id} className="hover:bg-cream/60">
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
@@ -106,6 +110,7 @@ export default function AdminProjects() {
             </table>
           </div>
         )}
+        <Pagination page={page} pages={pages} onPageChange={setPage} />
       </Card>
 
       {editing && (

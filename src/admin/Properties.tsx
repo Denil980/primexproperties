@@ -4,7 +4,7 @@ import { Loader2, Pencil, Trash2, Plus, Search, Eye, EyeOff, Star } from 'lucide
 import SEO from '../components/SEO';
 import { apiGet, apiMut, formatINR } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
-import { Card, CardHead, Empty, inputCls, btnPrimary, btnGhost, StatusPill } from './ui';
+import { Card, CardHead, Empty, inputCls, btnPrimary, btnGhost, StatusPill, Pagination } from './ui';
 
 export default function AdminProperties() {
   const { isAdmin } = useAuth();
@@ -17,7 +17,7 @@ export default function AdminProperties() {
 
   const load = () => {
     setLoading(true);
-    const q = new URLSearchParams({ limit: '20', page: String(page), is_active: 'all', sort: 'newest' });
+    const q = new URLSearchParams({ limit: '7', page: String(page), is_active: 'all', sort: 'newest' });
     if (search) q.set('search', search);
     apiGet(`/api/properties?${q.toString()}`).then((r) => { setItems(r.data || []); setTotal(r.total || 0); }).catch(() => {}).finally(() => setLoading(false));
   };
@@ -40,7 +40,7 @@ export default function AdminProperties() {
     load();
   };
 
-  const pages = Math.max(1, Math.ceil(total / 20));
+  const pages = Math.max(1, Math.ceil(total / 7));
 
   return (
     <div className="space-y-5">
@@ -113,13 +113,7 @@ export default function AdminProperties() {
             </table>
           </div>
         )}
-        {pages > 1 && (
-          <div className="flex items-center justify-center gap-2 px-5 py-4 border-t border-ink/10">
-            <button disabled={page <= 1} onClick={() => setPage(page - 1)} className={btnGhost}>Prev</button>
-            <span className="text-sm text-ink/60 px-2">{page} / {pages}</span>
-            <button disabled={page >= pages} onClick={() => setPage(page + 1)} className={btnGhost}>Next</button>
-          </div>
-        )}
+        <Pagination page={page} pages={pages} onPageChange={(p) => setPage(p)} />
       </Card>
     </div>
   );
