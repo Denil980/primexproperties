@@ -65,7 +65,16 @@ export default async function handler(req, res) {
       if (!isAdmin && me?.id !== id) return res.status(403).json({ error: 'You can only update your own profile' });
       const { data, error } = await supabase.from('profiles').update(update).eq('id', id).select().single();
       if (error) throw error;
-      if (update.role) audit(req, { user, profile: me, role: myRole }, 'role_change', 'profile', id, { to: update.role });
+      if (update.role) {
+        audit(req, { user, profile: me, role: myRole }, 'role_change', 'profile', id, { to: update.role });
+        if (data?.user_id) {
+          try {
+            await supabase.auth.admin.updateUserById(data.user_id, { user_metadata: { role: update.role } });
+          } catch (e) {
+            console.warn('Auth metadata sync notice:', e?.message || e);
+          }
+        }
+      }
       return res.status(200).json(data);
     }
     if (req.method === 'DELETE') {
