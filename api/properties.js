@@ -23,15 +23,44 @@ function cleanBody(body) {
   return b;
 }
 
+const DEFAULT_PROJECTS = [
+  { id: 1, name: 'Worli Sea Crest', locality: 'Worli', city: 'Mumbai', status: 'Ready to Move', slug: 'worli-sea-crest', cover_image: '/images/tower-a.jpg', description: 'Iconic sea-facing luxury towers in Worli.', price_min: 45000000, price_max: 120000000, featured: true },
+  { id: 2, name: 'Hiranandani Oakwood', locality: 'Powai', city: 'Mumbai', status: 'Ready to Move', slug: 'hiranandani-oakwood', cover_image: '/images/tower-b.jpg', description: 'High-rise luxury living overlooking Powai Lake.', price_min: 32000000, price_max: 75000000, featured: true },
+  { id: 3, name: 'Serenity Lakeside', locality: 'Thane West', city: 'Thane', status: 'Under Construction', slug: 'serenity-lakeside', cover_image: '/images/thane-lake.jpg', description: 'Lakeside township with premium lifestyle amenities.', price_min: 18000000, price_max: 42000000, featured: true },
+  { id: 4, name: 'Sagar Vihar Waterfront', locality: 'Vashi', city: 'Navi Mumbai', status: 'Ready to Move', slug: 'sagar-vihar-waterfront', cover_image: '/images/hero-skyline.jpg', description: 'Waterfront luxury apartments in Sector 8, Vashi.', price_min: 22000000, price_max: 55000000 },
+  { id: 5, name: 'Belapur Crest', locality: 'Belapur', city: 'Navi Mumbai', status: 'Under Construction', slug: 'belapur-crest', cover_image: '/images/tower-a.jpg', description: 'CBD Belapur premium commercial & residential towers.', price_min: 15000000, price_max: 38000000 },
+  { id: 6, name: 'Palm Meadows', locality: 'Kharghar', city: 'Navi Mumbai', status: 'Ready to Move', slug: 'palm-meadows', cover_image: '/images/tower-c.jpg', description: 'Luxury golf-course view residences in Kharghar.', price_min: 12500000, price_max: 32000000 },
+  { id: 7, name: 'Nexzone Aria', locality: 'Panvel', city: 'Navi Mumbai', status: 'Under Construction', slug: 'nexzone-aria', cover_image: '/images/tower-b.jpg', description: 'Modern high-tech township near Panvel airport hub.', price_min: 8500000, price_max: 19000000 },
+  { id: 8, name: 'Urbania Crown', locality: 'Majiwada', city: 'Thane', status: 'Ready to Move', slug: 'urbania-crown', cover_image: '/images/tower-a.jpg', description: 'Integrated luxury township at Majiwada junction.', price_min: 14000000, price_max: 35000000 },
+  { id: 9, name: 'Ghodbunder Gateway', locality: 'Ghodbunder Road', city: 'Thane', status: 'New Launch', slug: 'ghodbunder-gateway', cover_image: '/images/tower-c.jpg', description: 'Scenic green towers along Ghodbunder corridor.', price_min: 11000000, price_max: 28000000 },
+  { id: 10, name: 'Riverside County', locality: 'Panvel', city: 'Navi Mumbai', status: 'Under Construction', slug: 'riverside-county', cover_image: '/images/villa-a.jpg', description: 'Riverfront villas and penthouse residences.', price_min: 16000000, price_max: 45000000 },
+  { id: 11, name: 'Grand Central Seawoods', locality: 'Nerul', city: 'Navi Mumbai', status: 'Ready to Move', slug: 'grand-central-seawoods', cover_image: '/images/tower-a.jpg', description: 'Integrated transit-oriented luxury enclave in Seawoods.', price_min: 24000000, price_max: 60000000 },
+  { id: 12, name: 'Godrej Hills Retreat', locality: 'Kharghar', city: 'Navi Mumbai', status: 'New Launch', slug: 'godrej-hills-retreat', cover_image: '/images/tower-b.jpg', description: 'Hillside forest-theme luxury apartments.', price_min: 13500000, price_max: 31000000 },
+];
+
 async function validateForeignKeys(body) {
   if (body.project_id !== undefined && body.project_id !== null && body.project_id !== '') {
     const pid = Number(body.project_id);
     if (isNaN(pid) || pid <= 0) {
       body.project_id = null;
     } else {
-      const { data } = await supabase.from('projects').select('id').eq('id', pid).maybeSingle();
-      if (!data) body.project_id = null;
-      else body.project_id = pid;
+      const { data: dbProj } = await supabase.from('projects').select('id').eq('id', pid).maybeSingle();
+      if (dbProj?.id) {
+        body.project_id = dbProj.id;
+      } else {
+        const fallbackDef = DEFAULT_PROJECTS.find((p) => p.id === pid);
+        if (fallbackDef) {
+          let { data: matched } = await supabase.from('projects').select('id').eq('slug', fallbackDef.slug).maybeSingle();
+          if (!matched) {
+            const { id: _ignore, ...toInsert } = fallbackDef;
+            const { data: seeded } = await supabase.from('projects').insert(toInsert).select('id').maybeSingle();
+            matched = seeded;
+          }
+          body.project_id = matched?.id || null;
+        } else {
+          body.project_id = null;
+        }
+      }
     }
   } else if ('project_id' in body) {
     body.project_id = null;
