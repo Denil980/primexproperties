@@ -1,10 +1,24 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, MapPin } from 'lucide-react';
 import SEO from '../components/SEO';
-import { LOCALITIES } from '../data/localities';
+import { LOCALITIES, type Locality } from '../data/localities';
+import { apiGet } from '../lib/api';
 
 export default function Localities() {
+  const [list, setList] = useState<Locality[]>(LOCALITIES);
+
+  useEffect(() => {
+    apiGet<{ data: Locality[] }>('/api/localities')
+      .then((res) => {
+        if (res?.data && res.data.length > 0) {
+          setList(res.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="bg-cream min-h-screen">
       <SEO title="Locality Guides — Kharghar, Belapur, Vashi, Nerul, Thane & Powai" description="Data-rich locality guides: best properties in Kharghar, Belapur & Vashi, plus Nerul, Thane West & Powai. Prices, connectivity, schools & investment outlook." keywords="best properties in Kharghar, best properties in Belapur, best properties in Vashi, Thane West flats, Powai luxury homes" />
@@ -16,7 +30,7 @@ export default function Localities() {
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-5 lg:px-10 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {LOCALITIES.map((l, i) => (
+        {list.map((l, i) => (
           <motion.div key={l.slug} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (i % 3) * 0.07 }}>
             <Link to={`/localities/${l.slug}`} className="group relative block h-[440px] overflow-hidden">
               <img src={l.image} alt={l.tagline} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-108 transition-transform duration-[1.2s]" />

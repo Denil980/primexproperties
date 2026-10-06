@@ -29,6 +29,7 @@ import AdminProperties from './admin/Properties';
 import PropertyForm from './admin/PropertyForm';
 import AdminProjects from './admin/Projects';
 import AdminDevelopers from './admin/Developers';
+import AdminLocalities from './admin/Localities';
 import AdminLeads from './admin/Leads';
 import AdminVisits from './admin/Visits';
 import AdminRera from './admin/Rera';
@@ -93,6 +94,7 @@ export default function App() {
               <Route path="properties/:id" element={<PropertyForm />} />
               <Route path="projects" element={<AdminProjects />} />
               <Route path="developers" element={<AdminDevelopers />} />
+              <Route path="localities" element={<AdminLocalities />} />
               <Route path="leads" element={<ProtectedRoute staffOnly allow={SALES_ROLES}><AdminLeads /></ProtectedRoute>} />
               <Route path="visits" element={<ProtectedRoute staffOnly allow={SALES_ROLES}><AdminVisits /></ProtectedRoute>} />
               <Route path="rera" element={<AdminRera />} />

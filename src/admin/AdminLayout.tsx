@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet, Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Building2, FolderKanban, Users, UserCheck, CalendarDays, MessageSquareQuote, Newspaper, Search, BarChart3, LogOut, Menu, X, Home, ShieldCheck, ScrollText } from 'lucide-react';
+import { LayoutDashboard, Building2, FolderKanban, Users, UserCheck, CalendarDays, MessageSquareQuote, Newspaper, Search, BarChart3, LogOut, Menu, X, Home, ShieldCheck, ScrollText, MapPin } from 'lucide-react';
 import { useAuth, ROLE_LABELS, type Role } from '../contexts/AuthContext';
 
 interface NavItem { to: string; label: string; icon: typeof LayoutDashboard; end?: boolean; roles?: Role[] }
@@ -10,6 +10,7 @@ const LINKS: NavItem[] = [
   { to: '/admin/properties', label: 'Properties', icon: Building2 },
   { to: '/admin/projects', label: 'Projects', icon: FolderKanban },
   { to: '/admin/developers', label: 'Developers', icon: Users },
+  { to: '/admin/localities', label: 'Localities', icon: MapPin, roles: ['super_admin', 'admin', 'content_manager'] },
   { to: '/admin/leads', label: 'Leads CRM', icon: UserCheck, roles: ['super_admin', 'admin', 'sales_manager', 'sales_agent'] },
   { to: '/admin/visits', label: 'Site Visits', icon: CalendarDays, roles: ['super_admin', 'admin', 'sales_manager', 'sales_agent'] },
   { to: '/admin/rera', label: 'RERA Tracker', icon: ShieldCheck },

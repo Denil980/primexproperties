@@ -4,12 +4,12 @@ import { ArrowLeft, MapPin, Train, GraduationCap, TrendingUp, ArrowRight, Loader
 import SEO from '../components/SEO';
 import PropertyCard, { type CardProperty } from '../components/PropertyCard';
 import LeadFormModal from '../components/LeadFormModal';
-import { getLocality } from '../data/localities';
+import { getLocality, type Locality } from '../data/localities';
 import { apiGet } from '../lib/api';
 
 export default function LocalityDetail() {
   const { slug } = useParams();
-  const loc = getLocality(slug);
+  const [loc, setLoc] = useState<Locality | undefined>(() => getLocality(slug));
   const [props, setProps] = useState<CardProperty[]>([]);
   const [loading, setLoading] = useState(true);
   const [leadOpen, setLeadOpen] = useState(false);
@@ -17,10 +17,31 @@ export default function LocalityDetail() {
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
-    if (!loc) { setLoading(false); return; }
-    setLoading(true);
-    apiGet(`/api/properties?locality=${encodeURIComponent(loc.name)}&limit=6`).then((r) => setProps(r.data || [])).catch(() => setProps([])).finally(() => setLoading(false));
-  }, [slug]); // eslint-disable-line react-hooks/exhaustive-deps
+    const fallback = getLocality(slug);
+    setLoc(fallback);
+
+    apiGet<{ data: Locality[] }>('/api/localities')
+      .then((res) => {
+        if (res?.data) {
+          const found = res.data.find((item) => item.slug === slug);
+          if (found) {
+            setLoc(found);
+          }
+        }
+      })
+      .catch(() => {});
+
+    const targetLocName = fallback?.name || slug;
+    if (targetLocName) {
+      setLoading(true);
+      apiGet(`/api/properties?locality=${encodeURIComponent(targetLocName)}&limit=6`)
+        .then((r) => setProps(r.data || []))
+        .catch(() => setProps([]))
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [slug]);
 
   if (!loc) {
     return <div className="min-h-screen bg-cream flex flex-col items-center justify-center"><SEO title="Locality not found" /><div className="font-serif text-3xl text-ink">Guide not found</div><Link to="/localities" className="mt-5 bg-ink text-gold px-8 py-3 text-sm tracking-[0.18em] uppercase">All guides</Link></div>;
