@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import SEO from '../components/SEO';
 import { useAuth } from '../contexts/AuthContext';
+import { useModal } from '../contexts/ModalContext';
 import { apiGet } from '../lib/api';
 import { Card, CardHead, btnPrimary, btnGold, btnGhost, inputCls, labelCls, StatusPill } from './ui';
 
@@ -69,6 +70,7 @@ const DEFAULT_HISTORY: ExportLog[] = [
 
 export default function AdminReports() {
   const { profile } = useAuth();
+  const { showConfirm, showAlert } = useModal();
   
   // Dates state
   const todayStr = new Date().toISOString().split('T')[0];
@@ -189,9 +191,9 @@ export default function AdminReports() {
   };
 
   // Export to CSV / Excel
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (!items.length) {
-      alert('No data available to export.');
+      await showAlert('No dataset records found matching selected filters.', 'Export Notice', 'alert');
       return;
     }
 
@@ -217,12 +219,21 @@ export default function AdminReports() {
     document.body.removeChild(link);
 
     recordExport('EXCEL');
+    await showAlert(`Excel/CSV export generated successfully with ${items.length} records.`, 'Export Completed', 'success');
   };
 
   // Export to PDF / Formatted Print Document
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    if (!items.length) {
+      await showAlert('No dataset records found matching selected filters.', 'Export Notice', 'alert');
+      return;
+    }
+
     const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+    if (!printWindow) {
+      await showAlert('Pop-up blocker detected. Please allow popups to view and save the PDF report.', 'Pop-up Blocked', 'alert');
+      return;
+    }
 
     const reportTitle = `${categoryLabels[category] || 'System'} Report`;
     const exportTime = new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
@@ -249,7 +260,7 @@ export default function AdminReports() {
             .badge { background: #0b1320; color: #c5a880; padding: 6px 14px; font-size: 11px; font-family: sans-serif; text-transform: uppercase; letter-spacing: 1px; }
             .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; font-family: sans-serif; font-size: 12px; background: #f9f8f6; padding: 15px; border: 1px solid #e5e7eb; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th { text-align: left; padding: 10px; background: #0b1320; color: #fff; font-family: sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+            th { text-align: left; padding: 10px; background: #0b1320; color: #c5a880; font-family: sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
             .footer { margin-top: 40px; border-top: 1px solid #e5e7eb; pt: 15px; font-family: sans-serif; font-size: 11px; color: #9ca3af; display: flex; justify-content: space-between; }
           </style>
         </head>
@@ -298,10 +309,16 @@ export default function AdminReports() {
     recordExport('PDF');
   };
 
-  const clearHistory = () => {
-    if (confirm('Clear export history log?')) {
+  const clearHistory = async () => {
+    const ok = await showConfirm(
+      'Are you sure you want to clear the export history log? This action cannot be undone.',
+      'Clear Export History',
+      true
+    );
+    if (ok) {
       setHistory([]);
       localStorage.removeItem('primex_reports_export_history');
+      await showAlert('Export history log has been cleared.', 'History Cleared', 'success');
     }
   };
 
