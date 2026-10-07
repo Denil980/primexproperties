@@ -39,6 +39,7 @@ import AdminSeo from './admin/Seo';
 import AdminAnalytics from './admin/Analytics';
 import AdminUsers from './admin/Users';
 import AdminAuditLogs from './admin/AuditLogs';
+import AdminReports from './admin/Reports';
 
 import { ModalProvider } from './contexts/ModalContext';
 
@@ -104,6 +105,7 @@ export default function App() {
               <Route path="analytics" element={<ProtectedRoute staffOnly allow={[...ADMIN_ROLES, 'sales_manager']}><AdminAnalytics /></ProtectedRoute>} />
               <Route path="users" element={<ProtectedRoute staffOnly allow={ADMIN_ROLES}><AdminUsers /></ProtectedRoute>} />
               <Route path="audit-logs" element={<ProtectedRoute staffOnly allow={[...ADMIN_ROLES, 'sales_manager']}><AdminAuditLogs /></ProtectedRoute>} />
+              <Route path="reports" element={<ProtectedRoute staffOnly allow={[...ADMIN_ROLES, 'sales_manager']}><AdminReports /></ProtectedRoute>} />
             </Route>
 
             <Route path="*" element={<PublicShell><div className="min-h-[60vh] flex flex-col items-center justify-center px-5 pt-24"><div className="font-serif text-5xl text-ink">404</div><p className="text-ink/55 mt-2">This address doesn't exist — let's find one that does.</p><a href="/" className="mt-6 bg-ink text-gold px-8 py-3 text-sm tracking-[0.18em] uppercase">Back Home</a></div></PublicShell>} />

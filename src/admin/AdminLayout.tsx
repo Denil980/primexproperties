@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet, Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Building2, FolderKanban, Users, UserCheck, CalendarDays, MessageSquareQuote, Newspaper, Search, BarChart3, LogOut, Menu, X, Home, ShieldCheck, ScrollText, MapPin } from 'lucide-react';
+import { LayoutDashboard, Building2, FolderKanban, Users, UserCheck, CalendarDays, MessageSquareQuote, Newspaper, Search, BarChart3, LogOut, Menu, X, Home, ShieldCheck, ScrollText, MapPin, FileSpreadsheet } from 'lucide-react';
 import { useAuth, ROLE_LABELS, type Role } from '../contexts/AuthContext';
 
 interface NavItem { to: string; label: string; icon: typeof LayoutDashboard; end?: boolean; roles?: Role[] }
@@ -20,6 +20,7 @@ const LINKS: NavItem[] = [
   { to: '/admin/analytics', label: 'Analytics', icon: BarChart3, roles: ['super_admin', 'admin', 'sales_manager'] },
   { to: '/admin/users', label: 'Users & Roles', icon: Users, roles: ['super_admin', 'admin'] },
   { to: '/admin/audit-logs', label: 'Audit Logs', icon: ScrollText, roles: ['super_admin', 'admin', 'sales_manager'] },
+  { to: '/admin/reports', label: 'Reports', icon: FileSpreadsheet, roles: ['super_admin', 'admin', 'sales_manager'] },
 ];
 
 export default function AdminLayout() {
