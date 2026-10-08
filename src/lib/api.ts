@@ -8,20 +8,20 @@ export async function authHeaders(extra: Record<string, string> = {}): Promise<R
   return headers;
 }
 
-export async function apiGet(path: string) {
+export async function apiGet<T = any>(path: string): Promise<T> {
   const headers = await authHeaders();
   const res = await fetch(path, { headers });
   const data = await res.json().catch(() => null);
   if (!res.ok) throw new Error(data?.error || `Request failed (${res.status})`);
-  return data;
+  return data as T;
 }
 
-export async function apiMut(path: string, method: string, body?: unknown) {
+export async function apiMut<T = any>(path: string, method: string, body?: unknown): Promise<T> {
   const headers = await authHeaders();
   const res = await fetch(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
   const data = await res.json().catch(() => null);
   if (!res.ok) throw new Error(data?.error || `Request failed (${res.status})`);
-  return data;
+  return data as T;
 }
 
 export function formatINR(n: number | string | null | undefined): string {

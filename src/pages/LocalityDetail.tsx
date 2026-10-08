@@ -23,7 +23,7 @@ export default function LocalityDetail() {
     apiGet<{ data: Locality[] }>('/api/localities')
       .then((res) => {
         if (res?.data) {
-          const found = res.data.find((item) => item.slug === slug);
+          const found = res.data.find((item: Locality) => item.slug === slug);
           if (found) {
             setLoc(found);
           }
