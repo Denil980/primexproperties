@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "seed": "node --env-file=.env.local scripts/seed-data.mjs",
     "bootstrap:admin": "node --env-file=.env.local scripts/bootstrap-admin.mjs"
   },
   "dependencies": {
